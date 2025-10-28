@@ -9,33 +9,42 @@ BigInt
 Features
 """"""""
 
-Arithmetic operations
-+++++++++++++++++++++
+Arithmetic operations:
+++++++++++++++++++++++
 
-Addition (+)
-------------
-
-    * native method
-
-Subtraction (-)
----------------
+* **Addition (+)**
 
     * native method
 
-Multiplication (*)
-------------------
+* **Subtraction (-)**
+
+    * native method
+
+* **Multiplication (*)**
 
     * native method (less than 20000 digits)
     * Karatsuba method (more than 20000 digits)
     * fast Fourier transform (FFT) method (more than 20000 digits)
 
-Karatsuba multiplication method or FFT method is selected when initializing an instance of the **BigInt** class or using the **setMulMethod()** function of the **BigInt** class.
+.. Note::
+    Karatsuba multiplication method or FFT method is selected when initializing an instance of the **BigInt** class or using the **setMulMethod()** function of the **BigInt** class.
 
-Division (/)
-------------
+* **Division (/)**
 
     * native method (less than 20000 digits)
     * Newton-Raphson method (more than 20000 digits)
+
+Logical operations:
++++++++++++++++++++
+
+Logical "And" (&)
+-----------------
+
+    * native method
+
+Logical "Or" (|)
+
+    * native method
 
 Installation
 """"""""""""
