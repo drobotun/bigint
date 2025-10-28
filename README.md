@@ -1,2 +1,7 @@
-## BigInt
-C++ library for operations with integers of arbitrary size
+### BigInt
+## Overview
+# Features
+# Installation
+# Usage
+## License
+MIT Copyright (c) 2025 Evgeny Drobotun, Anna Boykova
