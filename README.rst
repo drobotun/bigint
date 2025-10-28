@@ -26,8 +26,7 @@ Arithmetic operations:
     * Karatsuba method (more than 20000 digits)
     * fast Fourier transform (FFT) method (more than 20000 digits)
 
-.. Note::
-    Karatsuba multiplication method or FFT method is selected when initializing an instance of the **BigInt** class or using the **setMulMethod()** function of the **BigInt** class.
+Karatsuba multiplication method or FFT method is selected when initializing an instance of the **BigInt** class or using the **setMulMethod()** function of the **BigInt** class.
 
 * **Division (/)**
 
@@ -37,12 +36,19 @@ Arithmetic operations:
 Logical operations:
 +++++++++++++++++++
 
-Logical "And" (&)
------------------
+* **Logical "And" (&)**
 
     * native method
 
-Logical "Or" (|)
+* **Logical "Or" (|)**
+
+    * native method
+
+* **Logical exlusive "Or" (^)**
+
+    * native method
+
+* **Logical negation (~)**
 
     * native method
 
