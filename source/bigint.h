@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2025 Evgeny Drobotun, Anna Boykova.
+** Copyright (C) 2025 Evgeny Drobotun, Anna Boykova
 ** Contact: evgeny@drobotun.su
 **
-** This file (along with the "BigInt.cpp" file) is module that implements
+** This file (along with the "bigint.cpp" file) is module that implements
 ** arithmetic and logical operation on long numbers.
 **
 ** Permission is hereby granted, free of charge, to any person obtaining a
