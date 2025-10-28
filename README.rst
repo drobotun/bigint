@@ -6,19 +6,16 @@ BigInt
 .. image:: https://img.shields.io/badge/Release-0.1.0-blue
     :target: https://github.com/drobotun/bigint/releases/tag/v0.1.0
 
-Overview
-________
-
 Features
-~~~~~~~~
+""""""""
 
 Installation
-~~~~~~~~~~~~
+""""""""""""
 
 Usage
-~~~~~
+"""""
 
 License
-_______
+"""""""
 
 MIT Copyright (c) 2025 Evgeny Drobotun, Anna Boykova
