@@ -3,6 +3,7 @@ BigInt
 
 .. image:: https://img.shields.io/github/license/drobotun/virustotalapi3?style=flat
    :target: https://github.com/drobotun/bigint/blob/master/LICENSE
+
 .. image:: https://img.shields.io/badge/Release-0.1.0-blue
    :alt: Static Badge
 
