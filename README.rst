@@ -9,8 +9,11 @@ BigInt
 Features
 """"""""
 
-Addition (+)
-------------
+Arithmetic operations
++++++++++++++++++++++
+
+    Addition (+)
+    ------------
 
     * native method
 
