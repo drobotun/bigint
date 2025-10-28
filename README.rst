@@ -8,14 +8,29 @@ BigInt
 
 Features
 """"""""
-* Multiplication
+
+Addition (+)
+------------
+
+    * native method
+
+Subtraction (-)
+---------------
+
+    * native method
+
+Multiplication (*)
+------------------
+
     * native method (less than 20000 digits)
     * Karatsuba method (more than 20000 digits)
     * fast Fourier transform (FFT) method (more than 20000 digits)
 
 Karatsuba multiplication method or FFT method is selected when initializing an instance of the **BigInt** class or using the **setMulMethod()** function of the **BigInt** class.
 
-* Division
+Division (/)
+------------
+
     * native method (less than 20000 digits)
     * Newton-Raphson method (more than 20000 digits)
 
