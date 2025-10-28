@@ -128,7 +128,7 @@ public:
     BigInt operator * (const long long other) const;
     BigInt operator / (const BigInt &other) const;
     BigInt operator / (const long long other) const;
-    BigInt operator % (consArbitrary-sized integer class for C++t BigInt &other) const;
+    BigInt operator % (const BigInt &other) const;
     BigInt operator % (const long long other) const;
 
     BigInt operator & (const BigInt &other) const;
