@@ -10,15 +10,15 @@ Overview
 ________
 
 Features
-++++++++
+~~~~~~~~
 
 Installation
-++++++++++++
+~~~~~~~~~~~~
 
 Usage
-+++++
+~~~~~
 
 License
 _______
 
-MIT <https://github.com/drobotun/bigint/blob/master/LICENSE>_ Copyright (c) 2025 Evgeny Drobotun, Anna Boykova
+`MIT <https://github.com/drobotun/bigint/blob/master/LICENSE>_` Copyright (c) 2025 Evgeny Drobotun, Anna Boykova
