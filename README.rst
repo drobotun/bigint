@@ -12,8 +12,8 @@ Features
 Arithmetic operations
 +++++++++++++++++++++
 
-    Addition (+)
-    ------------
+Addition (+)
+------------
 
     * native method
 
