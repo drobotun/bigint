@@ -20,7 +20,7 @@ Arithmetic operations:
     * Karatsuba method (more than 20000 digits)
     * fast Fourier transform (FFT) method (more than 20000 digits)
 
-Karatsuba multiplication method or FFT method is selected when initializing an instance of the ``BigInt`` class or using the ``setMulMethod()`` function of the ``BigInt`` class.
+Karatsuba multiplication method or FFT multiplication method is selected when initializing an instance of the ``BigInt`` class or using the ``setMulMethod()`` function of the ``BigInt`` class.
 
 * **Division (/)**
 
@@ -57,16 +57,22 @@ Logical operations:
 * **Bitwise left shift (<<)**
 * **Bitwise right shift (>>)**
 
-Input output jperations:
+Input output operations:
 ++++++++++++++++++++++++
 
-* **Output (<<)**
+* **Output (<<)** - redefined output operation for **BigInt** value 
 
-Redefined output operation for **BigInt** value 
+* **Intput (>>)** - redefined input operation for **BigInt** value 
 
-* **Intput (>>)**
+Mathematical functions:
++++++++++++++++++++++++
 
-Redefined input operation for **BigInt** value 
+* **sqr()** - squaring a number
+* **pow()** - exponentiation of a number (binary exponentiation algorithm)
+* **powMod()** - exponentiation of a number modulo (binary exponentiation algorithm)
+* **sqrt()** -
+* **root** -
+* **abs()** -
 
 Installation
 """"""""""""
