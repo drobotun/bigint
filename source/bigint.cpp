@@ -1,6 +1,6 @@
 #include "bigint.h"
 
-BigIntException::BigIntException(const std::string &message) :
+BigIntException::BigIntException(const std::string& message) :
     m_message{message}
 {
 
@@ -12,8 +12,8 @@ BigIntException::BigIntException(const ExceptionCode code) :
 
 }
 
-BigIntException::BigIntException(const std::string &message,
-                                   const ExceptionCode code) :
+BigIntException::BigIntException(const std::string& message,
+                                 const ExceptionCode code) :
     m_message{message}, m_code{code}
 {
 
@@ -29,17 +29,17 @@ ExceptionCode BigIntException::getExceptionCode() const noexcept
     return m_code;
 }
 
-std::vector<std::complex<double>>getFft(const std::vector<std::complex<double>> &value,
-                                         const bool invert)
+std::vector<std::complex<double>>getFft(const std::vector<std::complex<double>>& value,
+                                        const bool invert)
 {
     std::vector<std::complex<double>> result = value;
-    int resultSize = static_cast<int>(value.size());
+    size_t resultSize = (value.size());
     if(resultSize == 1) {
         return std::vector<std::complex<double>>(1, value[0]);
     }
     std::vector<std::complex<double>> notEvenValue(resultSize / 2);
     std::vector<std::complex<double>> evenValue(resultSize / 2);
-    for(int i = 0, j = 0; i < resultSize; i += 2, ++j) {
+    for(size_t i = 0, j = 0; i < resultSize; i += 2, ++j) {
         notEvenValue[j] = value[i];
         evenValue[j] = value[i + 1];
     }
@@ -48,7 +48,7 @@ std::vector<std::complex<double>>getFft(const std::vector<std::complex<double>> 
     double angle = 2 * PI / resultSize * (invert ? -1 : 1);
     std::complex<double> root_1(1);
     std::complex<double> root_n(std::cos(angle), std::sin(angle));
-    for(int i = 0; i < resultSize / 2; ++i) {
+    for(size_t i = 0; i < resultSize / 2; ++i) {
         result[i] = notEvenValue[i] + root_1 * evenValue[i];
         result[i + resultSize / 2] = notEvenValue[i] - root_1 * evenValue[i];
         if(invert) {
@@ -60,31 +60,228 @@ std::vector<std::complex<double>>getFft(const std::vector<std::complex<double>> 
     return result;
 }
 
-std::string binstrToAddition(const std::string &strValue)
+int charToInt(const uint8_t value)
 {
-    int carry = 1;
-    std::string result = strValue;
-    for(size_t i = 0; i < result.length(); i++) {
-        result[i] = result[i] == '0' ? '1' : '0';
+    if(value >= '0' && value <= '9') {
+        return value - '0';
     }
-    for(size_t i = 0; i < result.length(); i++) {
-        result[result.length() - 1 - i] = ((result[result.length() - 1 - i] - '0') + carry) + '0';
-        if(result[result.length() - 1 - i] == '2') {
-            result[result.length() - 1 - i] = '0';
-            carry = 1;
-        } else {
-            carry = 0;
+    if(value >= 'a' && value <= 'f') {
+        return value - 87;
+    }
+    return value - 55;
+}
+
+std::string byteToBinaryString(const uint8_t byte)
+{
+    std::string result;
+    uint8_t _byte = byte;
+    for(uint8_t i = 0; i < 8; i++) {
+        result.insert(result.begin(), '0' + (_byte & 1));
+        _byte = _byte >> 1;
+    }
+    return result;
+}
+
+uint8_t dividedBy_256(std::string& value)
+{
+    int remainder{0};
+    std::string result;
+    for(char digit : value) {
+        int current = remainder * 10 + (digit - '0');
+        int quotient = current / 256;
+        remainder = current % 256;
+        if(!result.empty() || quotient != 0) {
+            result.push_back('0' + quotient);
         }
     }
-    if(carry != 0) {
-        result.insert(result.begin(), '1');
+    value = result.empty() ? "0" : result;
+    return static_cast<uint8_t>(remainder & 0xff);
+}
+
+std::vector<uint8_t> hexadecimalStringToBytesVector(const std::string& value)
+{
+    std::vector<uint8_t> result;
+    if(value == "0") {
+        result.push_back(0);
+        return result;
+    }
+    uint8_t byte{0};
+    int bitCount{0};
+    for(auto it = value.rbegin(); it != value.rend(); it++) {
+        byte |= (charToInt(*it) << bitCount);
+        bitCount += 4;
+        if(bitCount >= 8) {
+            result.push_back(byte);
+            bitCount -= 8;
+            byte = (charToInt(*it) >> (4 - bitCount))&  ((1 << bitCount) - 1);
+        }
+    }
+    if(bitCount > 0) {
+        result.push_back(byte);
+    }
+    std::reverse(result.begin(), result.end());
+    return result;
+}
+
+std::vector<uint8_t> decimalStringToBytesVector(const std::string& value)
+{
+    std::vector<uint8_t> result;
+    if(value == "0") {
+        result.push_back(0);
+        return result;
+    }
+    std::string _value = value;
+    while (_value != "0") {
+        uint8_t byte = dividedBy_256(_value);
+        result.push_back(byte);
+    }
+    std::reverse(result.begin(), result.end());
+    return result;
+}
+
+std::vector<uint8_t> octalStringToBytesVector(const std::string& value)
+{
+    std::vector<uint8_t> result;
+    if(value == "0") {
+        result.push_back(0);
+        return result;
+    }
+    uint8_t byte{0};
+    int bitCount{0};
+    for(auto it = value.rbegin(); it != value.rend(); it++) {
+        byte |= ((*it - '0') << bitCount);
+        bitCount += 3;
+        if(bitCount >= 8) {
+            result.push_back(byte);
+            bitCount -= 8;
+            byte = ((*it - '0') >> (3 - bitCount))&  ((1 << bitCount) - 1);
+        }
+    }
+    if(bitCount > 0) {
+        result.push_back(byte);
+    }
+    std::reverse(result.begin(), result.end());
+    return result;
+}
+
+std::vector<uint8_t> binaryStringToBytesVector(const std::string& value)
+{
+    std::vector<uint8_t> result((value.length() + 7) / 8, 0);
+    size_t i{0};
+    for(auto it = value.rbegin(); it != value.rend(); it++) {
+        size_t byteIndex = i / 8;
+        size_t bitIndex = i % 8;
+        if(*it == '1') {
+            result[byteIndex] |= (1 << bitIndex);
+        }
+        i++;
+    }
+    std::reverse(result.begin(), result.end());
+    return result;
+}
+
+std::string bytesVectorToHexadecimalString(const std::vector<uint8_t>& value, const bool upper)
+{
+    std::string result;
+    result.reserve(value.size() * 2);
+    static constexpr char hexUpper[] = "012345678ABCDEF";
+    static constexpr char hexLower[] = "0123456789abcdef";
+    for(uint8_t byte : value) {
+        if(upper) {
+            result += hexUpper[byte >> 4];
+            result += hexUpper[byte&  0xf];
+        } else {
+            result += hexLower[byte >> 4];
+            result += hexLower[byte&  0xf];
+        }
+    }
+    return result;
+}
+
+std::string bytesVectorToDecimalString(const std::vector<uint8_t>& value)
+{
+    std::string result{"0"};
+    for(uint8_t byte : value) {
+        int carry{0};
+        for(long long i = static_cast<long long>(result.length() - 1); i >= 0; --i) {
+            int digit = (result[i] -'0') * 256 + carry;
+            result[i] = (digit % 10) + '0';
+            carry = digit / 10;
+        }
+        while(carry > 0) {
+            result.insert(result.begin(), (carry % 10) + '0');
+            carry /= 10;
+        }
+        carry = byte;
+        for(long long i = static_cast<long long>(result.length() - 1); i >= 0 && carry > 0; --i) {
+            int digit = (result[i] - '0') + carry;
+            result[i] = (digit % 10) + '0';
+            carry = digit / 10;
+        }
+        while(carry > 0) {
+            result.insert(result.begin(), (carry % 10) + '0');
+            carry /= 10;
+        }
+    }
+    return result;
+}
+
+std::string bytesVectorToOctalString(const std::vector<uint8_t>& value)
+{
+    std::string result{"0"};
+    for(uint8_t byte : value) {
+        int carry{0};
+        for(long long i = static_cast<long long>(result.length() - 1); i >= 0; --i) {
+            int digit = (result[i] -'0') * 256 + carry;
+            result[i] = (digit % 8) + '0';
+            carry = digit / 8;
+        }
+        while(carry > 0) {
+            result.insert(result.begin(), (carry % 8) + '0');
+            carry /= 8;
+        }
+        carry = byte;
+        for(long long i = static_cast<long long>(result.length() - 1); i >= 0 && carry > 0; --i) {
+            int digit = (result[i] - '0') + carry;
+            result[i] = (digit % 8) + '0';
+            carry = digit / 8;
+        }
+        while(carry > 0) {
+            result.insert(result.begin(), (carry % 8) + '0');
+            carry /= 8;
+        }
+    }
+    return result;
+}
+
+std::string bytesVectorToBinaryString(const std::vector<uint8_t>& value)
+{
+    std::string result;
+    for(uint8_t byte : value) {
+        result += byteToBinaryString(byte);
+    }
+    while(result[0] == '0' && result.length() > 1) {
+        result.erase(result.begin());
+    }
+    return result;
+}
+
+std::vector<uint8_t> bytesVectorToTwosComplement(const std::vector<uint8_t>& value) {
+    std::vector<uint8_t> result = value;
+    for (uint8_t& byte : result) {
+        byte = ~byte;
+    }
+    for (long long i = static_cast<long long>(result.size() - 1); i >= 0; --i) {
+        if(++result[i] != 0) {
+            break;
+        }
     }
     return result;
 }
 
 BigInt::BigInt()
 {
-    this->m_digits.push_back(0);
+    this->m_bytes.push_back(0);
 }
 
 BigInt::BigInt(const long long value) : BigInt(std::to_string(value))
@@ -102,84 +299,48 @@ BigInt::BigInt(const size_t value) : BigInt(std::to_string(value))
 
 }
 
-BigInt::BigInt(const std::string &strValue, const size_t radix) : BigInt()
+BigInt::BigInt(const std::string& value, const Radix radix) : BigInt()
 {
-    size_t beginDigits = 0;
-    if(strValue[0] == '+' || strValue[0] == '-') {
-        beginDigits = 1;
+    if(value[0] == '-') {
+        m_sign = true;
     }
-    if(radix == 10 || radix < 2 || radix > 36) {
-        for(size_t i = beginDigits; i < strValue.length(); i++) {
-            if(std::isdigit(strValue[i])) {
-                this->m_digits.push_back(strValue[i] - 48);
-            } else {
-                break;
-            }
-        }
-        this->normalize();
-    } else {
-        BigInt rawValue;
-        BigInt bigIntRadix(radix);
-        BigInt digit;
-        BigInt degreFactor;
-        for(size_t i = beginDigits; i < strValue.length(); i++) {
-            digit_t innerDigit;
-            if(std::isdigit(strValue[i])) {
-                innerDigit = strValue[i] - 48;
-                if(innerDigit >= radix) {
-                    break;
-                }
-            } else if(std::isupper(strValue[i]) && radix > 10) {
-                innerDigit = strValue[i] - 55;
-                if(innerDigit >= radix) {
-                    break;
-                }
-            } else if(std::islower(strValue[i]) && radix > 10) {
-                innerDigit = strValue[i] - 87;
-                if(innerDigit >= radix) {
-                    break;
-                }
-            } else {
-                break;
-            }
-            rawValue.m_digits.push_back(innerDigit);
-        }
-        rawValue.normalize();
-        std::reverse(rawValue.m_digits.begin(), rawValue.m_digits.end());
-        if(rawValue != 0) {
-            for(size_t i = 0; i < rawValue.size(); i++) {
-                degreFactor = bigIntRadix.powBase(i);
-                digit = rawValue.m_digits[i];
-                digit = digit.mulBase(degreFactor);
-                *this = this->addBase(digit);
-            }
-        } else {
-            *this = 0;
-        }
+    std::string _value = value;
+    if(_value[0] == '+' || _value[0] == '-') {
+        _value.erase(_value.begin());
     }
-    this->m_sign = strValue[0] == '-';
-    if(this->m_digits[0] == 0) {
-        this->m_sign = false;
+    switch(radix) {
+    case Radix::Hex:
+        m_bytes = hexadecimalStringToBytesVector(_value);
+        break;
+    case Radix::Dec:
+        m_bytes = decimalStringToBytesVector(_value);
+        break;
+    case Radix::Oct:
+        m_bytes = octalStringToBytesVector(_value);
+        break;
+    case Radix::Bin:
+        m_bytes = binaryStringToBytesVector(_value);
+        break;
     }
 }
 
-BigInt::BigInt(const char *strValue, const size_t radix) : BigInt(std::string(strValue), radix)
+BigInt::BigInt(const char *strValue, const Radix radix) : BigInt(std::string(strValue), radix)
 {
 
 }
 
-BigInt::BigInt(const BigInt &other)
+BigInt::BigInt(const BigInt& other) :
+    m_bytes(other.m_bytes),
+    m_sign(other.m_sign)
 {
-    this->m_digits = other.m_digits;
-    this->m_sign = other.m_sign;
+
 }
 
 #if __cplusplus >= 201103L
-BigInt::BigInt(BigInt &&other)
+BigInt::BigInt(BigInt&& other) noexcept :
+    m_bytes(std::move(other.m_bytes)),
+    m_sign(other.m_sign)
 {
-    this->m_digits = std::move(other.m_digits);
-    this->m_sign = std::move(other.m_sign);
-    other.m_digits.clear();
     other.m_sign = false;
 }
 #endif
@@ -189,22 +350,21 @@ BigInt::~BigInt()
 
 }
 
-BigInt& BigInt::operator = (const BigInt &other)
+BigInt& BigInt::operator = (const BigInt& other)
 {
-    if(this != &other) {
-        this->m_digits = other.m_digits;
+    if(this !=& other) {
+        this->m_bytes = other.m_bytes;
         this->m_sign = other.m_sign;
     }
     return *this;
 }
 
 #if __cplusplus >= 201103L
-BigInt& BigInt::operator = (BigInt &&other)
+BigInt& BigInt::operator = (BigInt&& other) noexcept
 {
-    if(this != &other) {
-        this->m_digits = std::move(other.m_digits);
-        this->m_sign = std::move(other.m_sign);
-        other.m_digits.clear();
+    if(this !=& other) {
+        this->m_bytes = std::move(other.m_bytes);
+        this->m_sign = other.m_sign;
         other.m_sign = false;
     }
     return *this;
@@ -217,62 +377,71 @@ BigInt& BigInt::operator = (const long long value)
     return *this;
 }
 
-size_t BigInt::size() const
+size_t BigInt::length() const
 {
-    return this->m_digits.size();
+    return this->m_bytes.size();
 }
 
 bool BigInt::isEven() const
 {
-    return ~this->m_digits[this->size() - 1] & 1;
+    return ~this->m_bytes[this->length() - 1] & 1;
 }
 
-unsigned long long BigInt::numBits()
+size_t BigInt::numBits()
 {
     if(*this == 0) {
         return 0;
     }
-    BigInt innerValue(*this);
-    unsigned long long result = 0;
-    while(innerValue != 0) {
+    BigInt _value(*this);
+    size_t result = 0;
+    while(_value != 0) {
         result++;
-        innerValue = innerValue.divBase(BigInt(2));
+        _value = _value.divBase(2);
     }
     return result;
 }
 
-std::string BigInt::toString(const size_t radix, const bool upper) const
+std::string BigInt::toString(const Radix radix, const bool upper) const
 {
     std::string result;
-    if(radix == 10 || radix < 2 || radix > 36) {
-        for(size_t i = 0; i < this->size(); i++) {
-            result.push_back(this->m_digits[i] + '0');
-        }
-    } else {
-        BigInt innerValue(*this);
-        innerValue.m_sign = false;
-        char charDigit;
-        int intDigit;
-        do {
-            intDigit = (innerValue.remBase(radix)).toInt();
-            innerValue = innerValue.divBase(radix);
-            if(intDigit < 10) {
-                charDigit = intDigit + 48;
-            } else {
-                if(upper) {
-                    charDigit = intDigit + 55;
-                } else {
-                    charDigit = intDigit + 87;
-                }
-            }
-            result.push_back(charDigit);
-        } while(innerValue != 0);
-        std::reverse(result.begin(), result.end());
+    switch(radix) {
+    case Radix::Hex:
+        result = bytesVectorToHexadecimalString(m_bytes, upper);
+        break;
+    case Radix::Dec:
+        result = bytesVectorToDecimalString(m_bytes);
+        break;
+    case Radix::Oct:
+        result = bytesVectorToOctalString(m_bytes);
+        break;
+    case Radix::Bin:
+        result = bytesVectorToBinaryString(m_bytes);
+        break;
     }
     if(this->m_sign) {
         result.insert(result.begin(), '-');
     }
     return result;
+}
+
+std::string BigInt::toHex(const bool upper)
+{
+    return this->toString(Radix::Hex, upper);
+}
+
+std::string BigInt::toDec()
+{
+    return this->toString();
+}
+
+std::string BigInt::toOct()
+{
+    return this->toString(Radix::Oct);
+}
+
+std::string BigInt::toBin()
+{
+    return this->toString(Radix::Bin);
 }
 
 int BigInt::toInt() const
@@ -288,6 +457,11 @@ long BigInt::toLong() const
 long long BigInt::toLongLong() const
 {
     return std::stoll(this->toString().c_str());
+}
+
+unsigned int BigInt::toUInt() const
+{
+    return static_cast<unsigned int>(std::stoul(this->toString().c_str()));
 }
 
 unsigned long BigInt::toULong() const
@@ -311,15 +485,20 @@ BigInt BigInt::shlBitsBase(const size_t shift) const
         return *this;
     }
     BigInt result(*this);
-    for(size_t j = 0; j < shift; j++) {
-        uint8_t carry = 0;
-        for(long long i = result.size() - 1; i >= 0; --i) {
-            uint8_t current = result.m_digits[i] * 2 + carry;
-            result.m_digits[i] = current % 10;
-            carry = current / 10;
+    size_t byteShift = shift / 8;
+    size_t bitShift = shift % 8;
+    if(byteShift > 0) {
+        result.m_bytes.resize(result.length() + byteShift, 0);
+    }
+    if(bitShift > 0) {
+        uint8_t carry{0};
+        for(size_t i = result.length(); i-- > 0;) {
+            uint8_t current = (result.m_bytes[i] << bitShift) | carry;
+            carry = result.m_bytes[i] >> (8 - bitShift);
+            result.m_bytes[i] = current;
         }
         if(carry > 0) {
-            result.m_digits.insert(result.m_digits.begin(), carry);
+            result.m_bytes.insert(result.m_bytes.begin(), carry);
         }
     }
     return result;
@@ -331,161 +510,137 @@ BigInt BigInt::shrBitsBase(const size_t shift) const
         return *this;
     }
     BigInt result(*this);
-    for(size_t j = 0; j < shift; j++) {
+    size_t byteShift = shift / 8;
+    size_t bitShift = shift % 8;
+    if(byteShift > 0) {
+        result.m_bytes.erase(result.m_bytes.end() - byteShift, result.m_bytes.end());
+    }
+    if(bitShift > 0) {
         uint8_t carry = 0;
-        for(size_t i = 0; i < result.size(); i++) {
-            uint8_t current = carry * 10 + result.m_digits[i];
-            result.m_digits[i] = current / 2;
-            carry = current % 2;
-        }
-        while(result.size() > 1 && result.m_digits[0] == 0) {
-            result.m_digits.erase(result.m_digits.begin());
+        for(size_t i = 0; i < result.length(); i++) {
+            uint8_t current = (result.m_bytes[i] >> bitShift) | carry;
+            carry = result.m_bytes[i] << (8 - bitShift);
+            result.m_bytes[i] = current;
         }
     }
+    result.normalise();
     return result;
 }
 
-BigInt BigInt::shlDigitsBase(const size_t shift) const
+BigInt BigInt::shlBytesBase(const size_t shift) const
 {
+    if(shift == 0) {
+        return *this;
+    }
     BigInt result(*this);
-    result.m_digits.resize(result.size() + shift, 0);
+    result.m_bytes.resize(result.length() + shift, 0);
     return result;
 }
 
-BigInt BigInt::shrDigitsBase(const size_t shift) const
+BigInt BigInt::shrBytesBase(const size_t shift) const
 {
-    if(shift >= this->size()) {
+    if(shift == 0) {
+        return *this;
+    }
+    if(shift >= this->length()) {
         return 0;
     }
     BigInt result(*this);
-    result.m_digits.resize(result.size() - shift, 0);
+    result.m_bytes.resize(result.length() - shift, 0);
     return result;
 }
 
-BigInt BigInt::orBase(const BigInt &value) const
+BigInt BigInt::orBase(const BigInt& value) const
 {
+    BigInt result;
+    std::vector<uint8_t> rightDigits = this->m_bytes;
+    std::vector<uint8_t> leftDigits = value.m_bytes;
     if(abs(*this) <= LLONG_MAX && abs(value) <= LLONG_MAX) {
-        return this->toLongLong() | value.toLongLong();
+        result = this->toLongLong() | value.toLongLong();
     } else {
-        std::string strValue_1(this->toString(2));
-        std::string strValue_2(value.toString(2));
-        std::string strResult;
-        bool resultSign = this->m_sign | value.m_sign;
-        if(this->m_sign) {
-            strValue_1.erase(strValue_1.begin());
-        }
-        if(value.m_sign) {
-            strValue_2.erase(strValue_2.begin());
-        }
-        if(strValue_1.length() > strValue_2.length()) {
-            strValue_2.insert(strValue_2.begin(), strValue_1.length() - strValue_2.length(), '0');
-        } else if(strValue_1.length() < strValue_2.length()) {
-            strValue_1.insert(strValue_1.begin(), strValue_2.length() - strValue_1.length(), '0');
+        result.m_sign = this->m_sign | value.m_sign;
+        if(rightDigits.size() > leftDigits.size()) {
+            leftDigits.insert(leftDigits.begin(), rightDigits.size() - leftDigits.size(), 0);
+        } else if(rightDigits.size() < leftDigits.size()) {
+            rightDigits.insert(rightDigits.begin(), leftDigits.size() - rightDigits.size(), 0);
         }
         if(this->m_sign) {
-            strValue_1 = binstrToAddition(strValue_1);
+            rightDigits = bytesVectorToTwosComplement(rightDigits);
         }
         if(value.m_sign) {
-            strValue_2 = binstrToAddition(strValue_2);
+            leftDigits = bytesVectorToTwosComplement(leftDigits);
         }
-        if(strValue_1.length() > strValue_2.length()) {
-            strValue_2.insert(strValue_2.begin(), strValue_1.length() - strValue_2.length(), '0');
-        } else if(strValue_1.length() < strValue_2.length()) {
-            strValue_1.insert(strValue_1.begin(), strValue_2.length() - strValue_1.length(), '0');
-        }
-        for(size_t i = 0; i < strValue_1.length(); i++) {
-            strResult.push_back(((strValue_1[i] - '0') | (strValue_2[i] - '0')) + '0');
-        }
-        if(resultSign) {
-            strResult = binstrToAddition(strResult);
-            strResult.insert(strResult.begin(), '-');
-        }
-        return strToBigInt(strResult, 2);
     }
+    for(size_t i = 0; i < rightDigits.size(); i++) {
+        result.m_bytes.push_back(rightDigits[i] | leftDigits[i]);
+    }
+    result.normalise();
+    if(result.m_sign) {
+        result.m_bytes = bytesVectorToTwosComplement(result.m_bytes);
+    }
+    return result;
 }
 
-BigInt BigInt::andBase(const BigInt &value) const
+BigInt BigInt::andBase(const BigInt& value) const
 {
+    BigInt result;
+    std::vector<uint8_t> rightDigits = this->m_bytes;
+    std::vector<uint8_t> leftDigits = value.m_bytes;
     if(abs(*this) <= LLONG_MAX && abs(value) <= LLONG_MAX) {
-        return this->toLongLong() & value.toLongLong();
+        result = this->toLongLong()&  value.toLongLong();
     } else {
-        std::string strValue_1(this->toString(2));
-        std::string strValue_2(value.toString(2));
-        std::string strResult;
-        bool resultSign = this->m_sign & value.m_sign;
-        if(this->m_sign) {
-            strValue_1.erase(strValue_1.begin());
-        }
-        if(value.m_sign) {
-            strValue_2.erase(strValue_2.begin());
-        }
-        if(strValue_1.length() > strValue_2.length()) {
-            strValue_2.insert(strValue_2.begin(), strValue_1.length() - strValue_2.length(), '0');
-        } else if(strValue_1.length() < strValue_2.length()) {
-            strValue_1.insert(strValue_1.begin(), strValue_2.length() - strValue_1.length(), '0');
+        result.m_sign = this->m_sign&  value.m_sign;
+        if(rightDigits.size() > leftDigits.size()) {
+            leftDigits.insert(leftDigits.begin(), rightDigits.size() - leftDigits.size(), 0);
+        } else if(rightDigits.size() < leftDigits.size()) {
+            rightDigits.insert(rightDigits.begin(), leftDigits.size() - rightDigits.size(), 0);
         }
         if(this->m_sign) {
-            strValue_1 = binstrToAddition(strValue_1);
+            rightDigits = bytesVectorToTwosComplement(rightDigits);
         }
         if(value.m_sign) {
-            strValue_2 = binstrToAddition(strValue_2);
+            leftDigits = bytesVectorToTwosComplement(leftDigits);
         }
-        if(strValue_1.length() > strValue_2.length()) {
-            strValue_2.insert(strValue_2.begin(), strValue_1.length() - strValue_2.length(), '0');
-        } else if(strValue_1.length() < strValue_2.length()) {
-            strValue_1.insert(strValue_1.begin(), strValue_2.length() - strValue_1.length(), '0');
-        }
-        for(size_t i = 0; i < strValue_1.length(); i++) {
-            strResult.push_back(((strValue_1[i] - '0') & (strValue_2[i] - '0')) + '0');
-        }
-        if(resultSign) {
-            strResult = binstrToAddition(strResult);
-            strResult.insert(strResult.begin(), '-');
-        }
-        return strToBigInt(strResult, 2);
     }
+    for(size_t i = 0; i < rightDigits.size(); i++) {
+        result.m_bytes.push_back(rightDigits[i]&  leftDigits[i]);
+    }
+    result.normalise();
+    if(result.m_sign) {
+        result.m_bytes = bytesVectorToTwosComplement(result.m_bytes);
+    }
+    return result;
 }
 
-BigInt BigInt::xorBase(const BigInt &value) const
+BigInt BigInt::xorBase(const BigInt& value) const
 {
+    BigInt result;
+    std::vector<uint8_t> rightDigits = this->m_bytes;
+    std::vector<uint8_t> leftDigits = value.m_bytes;
     if(abs(*this) <= LLONG_MAX && abs(value) <= LLONG_MAX) {
-        return this->toLongLong() ^ value.toLongLong();
+        result = this->toLongLong() ^ value.toLongLong();
     } else {
-        std::string strValue_1(this->toString(2));
-        std::string strValue_2(value.toString(2));void setMulMethod(MulMethod mul_mwthod);
-        std::string strResult;
-        bool resultSign = this->m_sign ^ value.m_sign;
-        if(this->m_sign) {
-            strValue_1.erase(strValue_1.begin());
-        }
-        if(value.m_sign) {
-            strValue_2.erase(strValue_2.begin());
-        }
-        if(strValue_1.length() > strValue_2.length()) {
-            strValue_2.insert(strValue_2.begin(), strValue_1.length() - strValue_2.length(), '0');
-        } else if(strValue_1.length() < strValue_2.length()) {
-            strValue_1.insert(strValue_1.begin(), strValue_2.length() - strValue_1.length(), '0');
+        result.m_sign = this->m_sign ^ value.m_sign;
+        if(rightDigits.size() > leftDigits.size()) {
+            leftDigits.insert(leftDigits.begin(), rightDigits.size() - leftDigits.size(), 0);
+        } else if(rightDigits.size() < leftDigits.size()) {
+            rightDigits.insert(rightDigits.begin(), leftDigits.size() - rightDigits.size(), 0);
         }
         if(this->m_sign) {
-            strValue_1 = binstrToAddition(strValue_1);
+            rightDigits = bytesVectorToTwosComplement(rightDigits);
         }
         if(value.m_sign) {
-            strValue_2 = binstrToAddition(strValue_2);
+            leftDigits = bytesVectorToTwosComplement(leftDigits);
         }
-        if(strValue_1.length() > strValue_2.length()) {
-            strValue_2.insert(strValue_2.begin(), strValue_1.length() - strValue_2.length(), '0');
-        } else if(strValue_1.length() < strValue_2.length()) {
-            strValue_1.insert(strValue_1.begin(), strValue_2.length() - strValue_1.length(), '0');
-        }
-        for(size_t i = 0; i < strValue_1.length(); i++) {
-            strResult.push_back(((strValue_1[i] - '0') ^ (strValue_2[i] - '0')) + '0');
-        }
-        if(resultSign) {
-            strResult = binstrToAddition(strResult);
-            strResult.insert(strResult.begin(), '-');
-        }
-        return strToBigInt(strResult, 2);
     }
+    for(size_t i = 0; i < rightDigits.size(); i++) {
+        result.m_bytes.push_back(rightDigits[i] ^ leftDigits[i]);
+    }
+    result.normalise();
+    if(result.m_sign) {
+        result.m_bytes = bytesVectorToTwosComplement(result.m_bytes);
+    }
+    return result;
 }
 
 BigInt BigInt::notBase() const
@@ -501,148 +656,151 @@ BigInt BigInt::notBase() const
     }
 }
 
-BigInt BigInt::addBase(const BigInt &value) const
+BigInt BigInt::addBase(const BigInt& value) const
 {
     if(*this == 0 && value == 0) {
         return 0;
     }
-    size_t resultSize = std::max(this->size(), value.size()) + 1;
+    if(*this == 0) {
+        return value;
+    }
+    if(value == 0) {
+        return *this;
+    }
+    size_t resultSize = std::max(this->length(), value.length()) + 1;
+
     if(resultSize <= LLONG_SIZE) {
         return this->toLongLong() + value.toLongLong();
     }
     BigInt result;
     if(this->m_sign == value.m_sign) {
-        digit_t digitRight, digitLeft, carry = 0;
-        std::vector<digit_t> digitsRight = this->m_digits;
-        std::vector<digit_t> digitsLeft = value.m_digits;
-        result.m_digits.resize(resultSize);
+        uint8_t rightByte, leftByte, carry{0};
+        std::vector<uint8_t> rightBytes = this->m_bytes;
+        std::vector<uint8_t> leftBytes = value.m_bytes;
+        result.m_bytes.resize(resultSize);
         result.m_sign = this->m_sign;
         for(size_t i = 0; i < resultSize; i++) {
-
-            digitsRight.size() >= i + 1 ? digitRight = digitsRight[digitsRight.size() - (i + 1)] : digitRight = 0;
-            digitsLeft.size() >= i + 1 ? digitLeft = digitsLeft[digitsLeft.size() - (i + 1)] : digitLeft = 0;
-            result.m_digits[resultSize - (i + 1)] = (digitRight + digitLeft + carry) % 10;
-            carry = (digitRight + digitLeft + carry) / 10;
+            rightBytes.size() >= i + 1 ? rightByte = rightBytes[rightBytes.size() - (i + 1)] : rightByte = 0;
+            leftBytes.size() >= i + 1 ? leftByte = leftBytes[leftBytes.size() - (i + 1)] : leftByte = 0;
+            result.m_bytes[resultSize - (i + 1)] = (rightByte + leftByte + carry) % 256;
+            carry = (rightByte + leftByte + carry) / 256;
         }
     } else {
         result = this->m_sign ? value.subBase(-*this) : this->subBase(-value);
     }
-    result.normalize();
+    result.normalise();
     return result;
 }
 
-BigInt BigInt::subBase(const BigInt &value) const
+BigInt BigInt::subBase(const BigInt& value) const
 {
     if(*this == value) {
         return 0;
     }
-    size_t resultSize = std::max(this->size(), value.size()) + 1;
+    if(*this == 0) {
+        return -value;
+    }
+    if(value == 0) {
+        return *this;
+    }
+    size_t resultSize = std::max(this->length(), value.length()) + 1;
     if(resultSize <= LLONG_SIZE) {
         return this->toLongLong() - value.toLongLong();
     }
     BigInt result;
     if(this->m_sign == value.m_sign) {
-        int digitRight, digitLeft, loan = 0;
-        std::vector<digit_t> digitsRight;
-        std::vector<digit_t> digitsLeft;
-        result.m_digits.resize(resultSize);
+        int rightByte, leftByte, borrow = 0;
+        std::vector<uint8_t> rightBytes;
+        std::vector<uint8_t> leftBytes;
+        result.m_bytes.resize(resultSize);
         if(!this->m_sign && !value.m_sign)  {
             if(*this < value) {
                 result.m_sign = true;
-                digitsRight = this->m_digits;
-                digitsLeft = value.m_digits;
+                rightBytes = this->m_bytes;
+                leftBytes = value.m_bytes;
             } else {
                 result.m_sign = false;
-                digitsRight = value.m_digits;
-                digitsLeft = this->m_digits;
+                rightBytes = value.m_bytes;
+                leftBytes = this->m_bytes;
             }
         }
         if(this->m_sign && value.m_sign) {
             if(*this < value) {
                 result.m_sign = true;
-                digitsRight = this->m_digits;
-                digitsLeft = value.m_digits;
+                rightBytes = this->m_bytes;
+                leftBytes = value.m_bytes;
             } else {
                 result.m_sign = false;
-                digitsRight = value.m_digits;
-                digitsLeft = this->m_digits;
+                rightBytes = value.m_bytes;
+                leftBytes = this->m_bytes;
             }
         }
         for(size_t i = 0; i < resultSize - 1; i++) {
-            digitLeft = digitsLeft[digitsLeft.size() - (i + 1)] - loan;
-            digitsRight.size() >= i + 1 ? digitRight = digitsRight[digitsRight.size() - (i + 1)] : digitRight = 0;
-            digitLeft < digitRight ? loan = 1 : loan = 0;
-            result.m_digits[resultSize - (i + 1)] = (digitLeft + 10 * loan) - digitRight;
+            leftByte = leftBytes[leftBytes.size() - (i + 1)] - borrow;
+            rightBytes.size() >= i + 1 ? rightByte = rightBytes[rightBytes.size() - (i + 1)] : rightByte = 0;
+            leftByte < rightByte ? borrow = 1 : borrow = 0;
+            result.m_bytes[resultSize - (i + 1)] = (leftByte + 256 * borrow) - rightByte;
         }
     } else {
         result = this->addBase(-value);
     }
-    result.normalize();
+    result.normalise();
     return result;
 }
 
-BigInt BigInt::mulNative(const BigInt &value) const
+BigInt BigInt::mulNative(const BigInt& value) const
 {
-    size_t digitsLeftSize = this->size();
-    size_t digitsRightSize = value.size();
-    size_t resultSize = digitsLeftSize + digitsRightSize + 1;
     BigInt result;
-    result.m_digits.resize(resultSize);
+    result.m_bytes.resize(this->length() + value.length());
     result.m_sign = this->m_sign ^ value.m_sign;
-    std::vector<digit_t> digitsRight(resultSize), digitsLeft(resultSize);
-    for(size_t i = 0; i < resultSize; i++) {
-        digitsLeft[i] = i < digitsLeftSize ? this->m_digits[digitsLeftSize - 1 - i] : 0;
-        digitsRight[i] = i < digitsRightSize ? value.m_digits[digitsRightSize - 1 - i] : 0;
-    }
-    for(size_t i = 0; i < digitsLeftSize; i++) {
-        for(size_t j = 0; j < digitsRightSize; j++) {
-            result.m_digits[resultSize - 1 - (i + j)] += digitsLeft[i] * digitsRight[j];
-            result.m_digits[resultSize - 1 - (i + j + 1)] += result.m_digits[resultSize - 1 - (i + j)] / 10;
-            result.m_digits[resultSize - 1 - (i + j)] %= 10;
+    for(long long i = value.length() - 1; i >= 0; --i) {
+        uint32_t carry{0};
+        for(long long j = this->length() - 1; j >= 0; --j) {
+            uint32_t byte = result.m_bytes[i + j + 1] + this->m_bytes[j] * value.m_bytes[i] + carry;
+            carry = byte / 256;
+            result.m_bytes[i + j + 1] = byte % 256;
         }
+        result.m_bytes[i] += carry;
     }
-    result.normalize();
+    result.normalise();
     return result;
 }
 
-BigInt BigInt::mulKaratsuba(const BigInt &value) const
+BigInt BigInt::mulKaratsuba(const BigInt& value) const
 {
-    bool resultSign = this->m_sign ^ value.m_sign;
-    std::vector<digit_t> digits_1 = this->m_digits;
-    std::vector<digit_t> digits_2 = value.m_digits;
-    BigInt value_1 = *this;
-    BigInt value_2 = value;
-    size_t sizeDigits_1 = digits_1.size();
-    size_t sizeDigits_2 = digits_2.size();
-    size_t maxSize = std::max(sizeDigits_1, sizeDigits_2);
-    if(sizeDigits_1 == 1 || sizeDigits_2 == 1) {
-            return value_1.mulNative(value_2);
+
+    BigInt leftValue = *this;
+    BigInt rightValue = value;
+    if(leftValue.length() == 1 || rightValue == 1) {
+            return leftValue.mulNative(rightValue);
     }
+    size_t maxSize = std::max(leftValue.length(), rightValue.length());
     maxSize += maxSize % 2;
     size_t halfSize = maxSize / 2;
-    BigInt value_1_right;
-    sizeDigits_1 > halfSize ? value_1_right.m_digits.assign(digits_1.end() - halfSize, digits_1.end()) :
-                                value_1_right.m_digits.assign(digits_1.begin(), digits_1.end());
-     BigInt value_2_right;
-     sizeDigits_2 > halfSize ? value_2_right.m_digits.assign(digits_2.end() - halfSize, digits_2.end()) :
-                                 value_2_right.m_digits.assign(digits_2.begin(), digits_2.end());
-     BigInt value_1_left(value_1.shrDigitsBase(halfSize));
-     BigInt value_2_left(value_2.shrDigitsBase(halfSize));
-     BigInt P1 = value_1_left.mulKaratsuba(value_2_left);
-     BigInt P2 = value_1_right.mulKaratsuba(value_2_right);
-     BigInt P3 = value_1_left.addBase(value_1_right).mulKaratsuba(value_2_left.addBase(value_2_right));
-     BigInt result = P1.shlDigitsBase(maxSize).addBase((P3.subBase(P2).subBase(P1).shlDigitsBase(halfSize)).addBase(P2));
-     result.m_sign = resultSign;
+    BigInt leftValueLow;
+    leftValue.length() > halfSize ? leftValueLow.m_bytes.assign(leftValue.m_bytes.end() - halfSize, leftValue.m_bytes.end()) :
+                                  leftValueLow.m_bytes.assign(leftValue.m_bytes.begin(), leftValue.m_bytes.end());
+     BigInt rightValueLow;
+     rightValue.length() > halfSize ? rightValueLow.m_bytes.assign(rightValue.m_bytes.end() - halfSize, rightValue.m_bytes.end()) :
+                                    rightValueLow.m_bytes.assign(rightValue.m_bytes.begin(), rightValue.m_bytes.end());
+     BigInt leftValueHigh = leftValue.shrBytesBase(halfSize);
+     BigInt rightValueHigh = rightValue.shrBytesBase(halfSize);
+     BigInt p_1 = leftValueHigh.mulBase(rightValueHigh);
+     BigInt p_2 = leftValueLow.mulBase(rightValueLow);
+     BigInt p_3 = leftValueHigh.addBase(leftValueLow).mulBase(rightValueHigh.addBase(rightValueLow));
+     BigInt result = p_1.shlBytesBase(maxSize).addBase((p_3.subBase(p_2).subBase(p_1).shlBytesBase(halfSize)).addBase(p_2));
+     result.m_sign = this->m_sign ^ value.m_sign;
+     result.normalise();
      return result;
 }
 
-BigInt BigInt::mulFft(const BigInt &value) const
+BigInt BigInt::mulFft(const BigInt& value) const
 {
     BigInt result;
-    result.m_digits.clear();
+    result.m_bytes.clear();
     result.m_sign = this->m_sign ^ value.m_sign;
-    std::vector<std::complex<double>> complexValue_1(this->m_digits.begin(), this->m_digits.end()),
-            complexValue_2(value.m_digits.begin(), value.m_digits.end());
+    std::vector<std::complex<double>> complexValue_1(this->m_bytes.begin(), this->m_bytes.end()),
+            complexValue_2(value.m_bytes.begin(), value.m_bytes.end());
     size_t resultSize = 1;
     std::reverse (complexValue_1.begin(), complexValue_1.end());
     std::reverse (complexValue_2.begin(), complexValue_2.end());
@@ -662,17 +820,17 @@ BigInt BigInt::mulFft(const BigInt &value) const
     unsigned int resultDigit;
     for(size_t i = 0; i < resultSize; ++i) {
         resultDigit = static_cast<unsigned int>(complexValue_1[i].real() + 0.5) + carry;
-        carry = resultDigit / 10;
-        resultDigit = resultDigit % 10;
-        result.m_digits.push_back(resultDigit);
+        carry = resultDigit / 256;
+        resultDigit = resultDigit % 256;
+        result.m_bytes.push_back(resultDigit);
     }
-    result.m_digits.push_back(carry);
-    std::reverse(result.m_digits.begin(), result.m_digits.end());
-    result.normalize();
+    result.m_bytes.push_back(carry);
+    std::reverse(result.m_bytes.begin(), result.m_bytes.end());
+    result.normalise();
     return result;
 }
 
-BigInt BigInt::mulBase(const BigInt &value) const
+BigInt BigInt::mulBase(const BigInt& value) const
 {
     if(*this == 0 || value == 0) {
         return 0;
@@ -683,10 +841,10 @@ BigInt BigInt::mulBase(const BigInt &value) const
     if(value == 1) {
         return *this;
     }
-    if(this->size() + value.size() + 1 <= LLONG_SIZE) {
+    if(this->length() + value.length() + 1 <= LLONG_SIZE) {
         return this->toLongLong() * value.toLongLong();
     }
-    if(this->size() + value.size() + 1 > 20000) {
+    if(this->length() + value.length() + 1 > 50000) {
         if(m_mulMethod == MulMethod::Karatsuba) {
             return this->mulKaratsuba(value);
         } else if(m_mulMethod == MulMethod::FastFourierTransform) {
@@ -696,22 +854,20 @@ BigInt BigInt::mulBase(const BigInt &value) const
     return this->mulNative(value);
 }
 
-BigInt BigInt::divNative(const BigInt &value) const
+BigInt BigInt::divNative(const BigInt& value) const
 {
     BigInt divident(abs(*this));
     BigInt divider(abs(value));
     BigInt result;
     BigInt subResult;
-    size_t dividentSize = divident.size();
-    size_t index = 0;
-    long long llDivider = divider > LONG_LONG_MAX ? 0 : divider.toLongLong();
-    while(subResult < divider && index < dividentSize) {
-        subResult.m_digits.push_back(divident.m_digits[index++]);
+    size_t index{0};
+    while(subResult < divider && index < divident.length()) {
+        subResult.m_bytes.push_back(divident.m_bytes[index++]);
     }
-    subResult.normalize();
+    subResult.normalise();
     do {
         int count = 0;
-        if (divider > LONG_LONG_MAX) {
+        if(divider > LONG_LONG_MAX) {
             BigInt mod = subResult;
             while(mod >= divider) {
                 mod = mod.subBase(divider);
@@ -720,47 +876,48 @@ BigInt BigInt::divNative(const BigInt &value) const
             subResult = mod;
         } else {
             long long mod = subResult.toLongLong();
-            count = mod / llDivider;
-            subResult = mod % llDivider;
+            count = mod / divider.toLongLong();
+            subResult = mod % divider.toLongLong();
         }
-        result.m_digits.push_back(count);
-        if(index <= dividentSize) {
-            subResult.m_digits.push_back(divident.m_digits[index++]);
+        result.m_bytes.push_back(count);
+        if(index <= divident.length()) {
+            subResult.m_bytes.push_back(divident.m_bytes[index++]);
         }
-    } while(index <= dividentSize);
+    } while(index <= divident.length());
     result.m_sign = this->m_sign ^ value.m_sign;
-    result.normalize();
+    result.normalise();
     return result;
 }
 
-BigInt BigInt::divNewtonRaphson(const BigInt &value) const
+BigInt BigInt::divNewtonRaphson(const BigInt& value) const
 {
     BigInt divident(*this);
     BigInt divider(value);
-    size_t shift = (divident.size() + divider.size());
-    BigInt powBase_10(2);
-    powBase_10 = powBase_10.shlDigitsBase(shift);
-    BigInt current = divident.subBase(divider);
+    size_t shift = divident.length() + divider.length();
+    BigInt powBase_256{2};
+    powBase_256 = powBase_256.shlBytesBase(shift);
+    BigInt current{1};
+    current = current.shlBytesBase(divident.length());
     BigInt last;
     while(last != current) {
         last = current;
-        current = (current.mulBase(powBase_10.subBase(current.mulBase(divider)))).shrDigitsBase(shift);
+        current = (current.mulBase(powBase_256.subBase(current.mulBase(divider)))).shrBytesBase(shift);
     }
     BigInt result = divident.mulBase(current);
-    result = result.shrDigitsBase(shift);
+    result = result.shrBytesBase(shift);
     BigInt remainder = divident.subBase(result.mulBase(divider));
     if(remainder >= divider) {
         result = result.addBase(1);
     }
     result.m_sign = this->m_sign ^ value.m_sign;
+    result.normalise();
     return result;
 }
 
-BigInt BigInt::divBase(const BigInt &value) const
+BigInt BigInt::divBase(const BigInt& value) const
 {
     if(value == 0) {
-        throw BigIntException("Divizion by zero",
-                              ExceptionCode::DivisionByZero);
+        throw BigIntException("Divizion by zero", ExceptionCode::DivisionByZero);
     }
     if(value > *this) {
         return 0;
@@ -768,23 +925,29 @@ BigInt BigInt::divBase(const BigInt &value) const
     if(value == *this) {
         return 1;
     }
+    if(value == -(*this)) {
+        return -1;
+    }
     if(value == 1) {
         return *this;
     }
-    size_t numZero = 0;
-    while(value.m_digits[numZero] == 0) {
-        numZero++;
+    if(value == -1) {
+        return -(*this);
+    }
+    size_t numberOfZero = 0;
+    while(value.m_bytes[numberOfZero] == 0) {
+        numberOfZero++;
     }
     if(abs(*this) <= LLONG_MAX && abs(value) <= LLONG_MAX) {
-        return this->shrDigitsBase(numZero).toLongLong() / value.shrDigitsBase(numZero).toLongLong();
-    } else if(this->size() < 1000 && value.size() < 1000) {
-        return this->shrDigitsBase(numZero).divNative(value.shrDigitsBase(numZero));
+        return this->shrBytesBase(numberOfZero).toLongLong() / value.shrBytesBase(numberOfZero).toLongLong();
+    } else if(this->length() < 50000 && value.length() < 500000) {
+        return this->shrBytesBase(numberOfZero).divNative(value.shrBytesBase(numberOfZero));
     } else {
-        return this->shrDigitsBase(numZero).divNewtonRaphson(value.shrDigitsBase(numZero));
+        return this->shrBytesBase(numberOfZero).divNewtonRaphson(value.shrBytesBase(numberOfZero));
     }
 }
 
-BigInt BigInt::remBase(const BigInt &value) const
+BigInt BigInt::remBase(const BigInt& value) const
 {
     if(value > *this) {
         return *this;
@@ -809,11 +972,11 @@ BigInt BigInt::powBase(long long exp) const
     if(!exp) {
         return *this;
     }
-    if(this->size() * exp + exp <= LLONG_SIZE) {
+    if(this->length() * exp + exp <= LLONG_SIZE) {
         return static_cast<long long>(std::pow(this->toLongLong(), exp));
     }
     BigInt result;
-    if(exp & 1) {
+    if(exp&  1) {
         result = this->powBase(exp - 1);
         return result.mulBase(*this);
     } else {
@@ -822,7 +985,7 @@ BigInt BigInt::powBase(long long exp) const
     }
 }
 
-BigInt BigInt::powBase(const BigInt &exp) const
+BigInt BigInt::powBase(const BigInt& exp) const
 {
     if(exp.m_sign) {
         return 0;
@@ -833,7 +996,7 @@ BigInt BigInt::powBase(const BigInt &exp) const
     if(exp == 1) {
         return *this;
     }
-    if(BigInt(this->size()).mulBase(exp).addBase(exp) <= LLONG_SIZE) {
+    if(BigInt(this->length()).mulBase(exp).addBase(exp) <= LLONG_SIZE) {
         return static_cast<long long>(std::pow(this->toLongLong(), exp.toLongLong()));
     }
     BigInt result;
@@ -846,7 +1009,7 @@ BigInt BigInt::powBase(const BigInt &exp) const
     }
 }
 
-BigInt BigInt::powModBase(const long long exp, const BigInt &mod) const
+BigInt BigInt::powModBase(const long long exp, const BigInt& mod) const
 {
     if(exp < 0) {
         return 0;
@@ -857,11 +1020,11 @@ BigInt BigInt::powModBase(const long long exp, const BigInt &mod) const
     if(exp == 1) {
         return *this;
     }
-    if(this->size() * exp + exp <= LLONG_SIZE && abs(mod) <= LLONG_MAX) {
+    if(this->length() * exp + exp <= LLONG_SIZE && abs(mod) <= LLONG_MAX) {
         return static_cast<long long>(std::pow(this->toLongLong(), exp)) % mod.toLongLong();
     }
     BigInt result;
-    if(exp & 1) {
+    if(exp&  1) {
         result = this->powModBase(exp - 1, mod);
         return result.mulBase(*this).remBase(mod);
     } else {
@@ -870,7 +1033,7 @@ BigInt BigInt::powModBase(const long long exp, const BigInt &mod) const
     }
 }
 
-BigInt BigInt::powModBase(const BigInt &exp, const BigInt &mod) const
+BigInt BigInt::powModBase(const BigInt& exp, const BigInt& mod) const
 {
     if(exp < 0) {
         return 0;
@@ -881,7 +1044,7 @@ BigInt BigInt::powModBase(const BigInt &exp, const BigInt &mod) const
     if(exp == 1) {
         return *this;
     }
-    if(BigInt(this->size()).mulBase(exp).addBase(exp) <= LLONG_SIZE && abs(mod) <= LLONG_MAX) {
+    if(BigInt(this->length()).mulBase(exp).addBase(exp) <= LLONG_SIZE && abs(mod) <= LLONG_MAX) {
         return static_cast<long long>(std::pow(this->toLongLong(), exp.toLongLong())) % mod.toLongLong();
     }
     BigInt result;
@@ -900,7 +1063,7 @@ BigInt BigInt::rootBase(const long long exp) const
         throw BigIntException("Divizion by zero",
                                ExceptionCode::DivisionByZero);
     }
-    if(this->m_sign && (exp & 1) == 0) {
+    if(this->m_sign && (exp&  1) == 0) {
         throw BigIntException("Value must be positive",
                                ExceptionCode::InvalidRootDegree);
     }
@@ -916,23 +1079,23 @@ BigInt BigInt::rootBase(const long long exp) const
     if(abs(*this) >= exp && !this->m_sign) {
         return 1;
     }
-    size_t resultSize = (this->size() + 1) / 2;
+    size_t resultSize = (this->length() + 1) / 2;
     size_t index = 0;
     BigInt result;
-    result.m_digits.resize(resultSize);
+    result.m_bytes.resize(resultSize);
     while(index < resultSize) {
-        result.m_digits[index] = 9;
-        while(result.powBase(exp) > abs(*this) && result.m_digits[index] > 0) {
-            result.m_digits[index]--;
+        result.m_bytes[index] = 9;
+        while(result.powBase(exp) > abs(*this) && result.m_bytes[index] > 0) {
+            result.m_bytes[index]--;
         }
         index++;
     }
-    result.normalize();
+    result.normalise();
     result.m_sign = this->m_sign;
     return result;
 }
 
-BigInt BigInt::rootBase(const BigInt &exp) const
+BigInt BigInt::rootBase(const BigInt& exp) const
 {
     if(exp == 0) {
         throw BigIntException("Divizion by zero",
@@ -954,28 +1117,28 @@ BigInt BigInt::rootBase(const BigInt &exp) const
     if(abs(*this) >= exp && !this->m_sign) {
         return 1;
     }
-    size_t resultSize = (this->size() + 1) / 2;
+    size_t resultSize = (this->length() + 1) / 2;
     size_t index = 0;
     BigInt result;
-    result.m_digits.resize(resultSize);
+    result.m_bytes.resize(resultSize);
     while(index < resultSize) {
-        result.m_digits[index] = 9;
+        result.m_bytes[index] = 9;
 
-        while(result.powBase(exp) > abs(*this) && result.m_digits[index] > 0) {
-            result.m_digits[index]--;
+        while(result.powBase(exp) > abs(*this) && result.m_bytes[index] > 0) {
+            result.m_bytes[index]--;
         }
         index++;
     }
-    result.normalize();
+    result.normalise();
     result.m_sign = this->m_sign;
     return result;
 }
 
-void BigInt::normalize()
+void BigInt::normalise()
 {
-    while(this->m_digits[0] == 0 && this->size() > 1) {
-        this->m_digits.erase(this->m_digits.begin());
-    }
+    auto nonZero = std::find_if(this->m_bytes.begin(), this->m_bytes.end(),
+                                [](uint8_t x) {return x != 0;});
+    this->m_bytes.erase(this->m_bytes.begin(), nonZero);
 }
 
 BigInt BigInt::operator -- ()
@@ -1004,59 +1167,59 @@ BigInt BigInt::operator ++ (int)
     return result;
 }
 
-BigInt BigInt::operator - () const &
+BigInt BigInt::operator - () const&
 {
     BigInt result(*this);
     result.m_sign = !this->m_sign;
     return result;
 }
 
-BigInt BigInt::operator + () const &
+BigInt BigInt::operator + () const&
 {
     return *this;
 }
 
-bool BigInt::operator == (const BigInt &other) const
+bool BigInt::operator == (const BigInt& other) const
 {
-    return (this->m_digits == other.m_digits) && (this->m_sign == other.m_sign);
+    return (this->m_bytes == other.m_bytes) && (this->m_sign == other.m_sign);
 }
 
-bool BigInt::operator != (const BigInt &other) const
+bool BigInt::operator != (const BigInt& other) const
 {
     return !(*this == other);
 }
 
-bool BigInt::operator < (const BigInt &other) const
+bool BigInt::operator < (const BigInt& other) const
 {
-    size_t digitsLeftSize = this->size();
-    size_t digitsRightSize = other.size();
+    size_t digitsLeftSize = this->length();
+    size_t digitsRightSize = other.length();
     if(this->m_sign == other.m_sign) {
         if(digitsLeftSize != digitsRightSize) {
             return (digitsLeftSize < digitsRightSize) ^ this->m_sign;
         }
-        return (this->m_digits < other.m_digits) ^ this->m_sign;
+        return (this->m_bytes < other.m_bytes) ^ this->m_sign;
     }
     return this->m_sign;
 }
 
-bool BigInt::operator > (const BigInt &other) const
+bool BigInt::operator > (const BigInt& other) const
 {
     return !(*this < other || *this == other);
 }
 
-bool BigInt::operator >= (const BigInt &other) const
+bool BigInt::operator >= (const BigInt& other) const
 {
     return *this > other || *this == other;
 }
 
-bool BigInt::operator <= (const BigInt &other) const
+bool BigInt::operator <= (const BigInt& other) const
 {
     return *this < other || *this == other;
 }
 
 bool BigInt::operator == (const long long other) const
 {
-    return (this->m_digits == BigInt(other).m_digits) && (this->m_sign == BigInt(other).m_sign);
+    return (this->m_bytes == BigInt(other).m_bytes) && (this->m_sign == BigInt(other).m_sign);
 }
 
 bool BigInt::operator != (const long long other) const
@@ -1066,13 +1229,13 @@ bool BigInt::operator != (const long long other) const
 
 bool BigInt::operator < (const long long other) const
 {
-    size_t digitsLeftSize = this->size();
-    size_t digitsRightSize = BigInt(other).size();
+    size_t digitsLeftSize = this->length();
+    size_t digitsRightSize = BigInt(other).length();
     if(this->m_sign == BigInt(other).m_sign) {
         if(digitsLeftSize != digitsRightSize) {
             return (digitsLeftSize < digitsRightSize) ^ this->m_sign;
         }
-        return (this->m_digits < BigInt(other).m_digits) ^ this->m_sign;
+        return (this->m_bytes < BigInt(other).m_bytes) ^ this->m_sign;
     }
     return this->m_sign;
 }
@@ -1092,57 +1255,57 @@ bool BigInt::operator <= (const long long other) const
     return *this < other || *this == other;
 }
 
-BigInt BigInt::operator << (const unsigned long long shift) const
+BigInt BigInt::operator << (const size_t shift) const
 {
     return this->shlBitsBase(shift);
 }
 
-BigInt BigInt::operator >> (const unsigned long long shift) const
+BigInt BigInt::operator >> (const size_t shift) const
 {
     return this->shrBitsBase(shift);
 }
 
-BigInt BigInt::operator + (const BigInt &other) const
+BigInt BigInt::operator + (const BigInt& other) const
 {
     return this->addBase(other);
 }
 
-BigInt BigInt::operator - (const BigInt &other) const
+BigInt BigInt::operator - (const BigInt& other) const
 {
     return this->subBase(other);
 }
 
-BigInt BigInt::operator * (const BigInt &other) const
+BigInt BigInt::operator * (const BigInt& other) const
 {
     return this->mulBase(other);
 }
 
-BigInt BigInt::operator / (const BigInt &other) const
+BigInt BigInt::operator / (const BigInt& other) const
 {
     return this->divBase(other);
 }
 
-BigInt BigInt::operator % (const BigInt &other) const
+BigInt BigInt::operator % (const BigInt& other) const
 {
     return this->remBase(other);
 }
 
-BigInt BigInt::operator | (const BigInt &other) const
+BigInt BigInt::operator | (const BigInt& other) const
 {
     return this->orBase(other);
 }
 
-BigInt BigInt::operator & (const BigInt &other) const
+BigInt BigInt::operator&  (const BigInt& other) const
 {
     return this->andBase(other);
 }
 
-BigInt BigInt::operator ^ (const BigInt &other) const
+BigInt BigInt::operator ^ (const BigInt& other) const
 {
     return this->xorBase(other);
 }
 
-BigInt BigInt::operator ~ () const &
+BigInt BigInt::operator ~ () const&
 {
     return this->notBase();
 }
@@ -1177,7 +1340,7 @@ BigInt BigInt::operator | (const long long other) const
     return this->orBase(other);
 }
 
-BigInt BigInt::operator & (const long long other) const
+BigInt BigInt::operator&  (const long long other) const
 {
     return this->andBase(other);
 }
@@ -1199,49 +1362,49 @@ BigInt& BigInt::operator >>= (const size_t shift)
     return *this;
 }
 
-BigInt& BigInt::operator += (const BigInt &other)
+BigInt& BigInt::operator += (const BigInt& other)
 {
     *this = this->addBase(other);
     return *this;
 }
 
-BigInt& BigInt::operator -= (const BigInt &other)
+BigInt& BigInt::operator -= (const BigInt& other)
 {
     *this = this->subBase(other);
     return *this;
 }
 
-BigInt& BigInt::operator *= (const BigInt &other)
+BigInt& BigInt::operator *= (const BigInt& other)
 {
     *this = this->mulBase(other);
     return *this;
 }
 
-BigInt& BigInt::operator /= (const BigInt &other)
+BigInt& BigInt::operator /= (const BigInt& other)
 {
     *this = this->divBase(other);
     return *this;
 }
 
-BigInt& BigInt::operator %=(const BigInt &other)
+BigInt& BigInt::operator %=(const BigInt& other)
 {
     *this = this->remBase(other);
     return *this;
 }
 
-BigInt& BigInt::operator |=(const BigInt &other)
+BigInt& BigInt::operator |=(const BigInt& other)
 {
     *this = this->orBase(other);
     return *this;
 }
 
-BigInt& BigInt::operator &=(const BigInt &other)
+BigInt& BigInt::operator &=(const BigInt& other)
 {
     *this = this->andBase(other);
     return *this;
 }
 
-BigInt& BigInt::operator ^=(const BigInt &other)
+BigInt& BigInt::operator ^=(const BigInt& other)
 {
     *this = this->xorBase(other);
     return *this;
@@ -1271,69 +1434,69 @@ BigInt& BigInt::operator /= (const long long other)
     return *this;
 }
 
-BigInt& BigInt::operator %=(const long long other)
+BigInt& BigInt::operator %= (const long long other)
 {
     *this = this->remBase(other);
     return *this;
 }
 
-BigInt& BigInt::operator |=(const long long other)
+BigInt& BigInt::operator |= (const long long other)
 {
     *this = this->orBase(other);
     return *this;
 }
 
-BigInt& BigInt::operator &=(const long long other)
+BigInt& BigInt::operator &= (const long long other)
 {
     *this = this->andBase(other);
     return *this;
 }
 
-BigInt& BigInt::operator ^=(const long long other)
+BigInt& BigInt::operator ^= (const long long other)
 {
     *this = this->xorBase(other);
     return *this;
 }
 
-BigInt strToBigInt(const std::string &strValue, const size_t radix)
+BigInt strToBigInt(const std::string& strValue, const Radix radix)
 {
     return BigInt(strValue, radix);
 }
 
-BigInt strToBigInt(const char *strValue, size_t radix)
+BigInt strToBigInt(const char* strValue, const Radix radix)
 {
     return strToBigInt(std::string(strValue), radix);
 }
 
-std::ostream& operator << (std::ostream &out, const BigInt &value)
+std::ostream& operator << (std::ostream& out, const BigInt& value)
 {
-    std::ios_base::fmtflags baseFlag = out.flags() &
+    std::ios_base::fmtflags baseFlag = out.flags()&
             (std::ios_base::hex | std::ios_base::dec | std::ios_base::oct);
-    std::ios_base::fmtflags showBaseFlag = out.flags() & (std::ios_base::showbase);
-    std::ios_base::fmtflags showPosFlag = out.flags() & (std::ios_base::showpos);
-    std::ios_base::fmtflags uppercaseFlag = out.flags() & (std::ios_base::uppercase);
+    std::ios_base::fmtflags showBaseFlag = out.flags()&  (std::ios_base::showbase);
+    std::ios_base::fmtflags showPosFlag = out.flags()&  (std::ios_base::showpos);
+    std::ios_base::fmtflags uppercaseFlag = out.flags()&  (std::ios_base::uppercase);
     size_t width = out.width();
     char fillChar = out.fill();
     std::string result;
     switch(baseFlag) {
     case std::ios_base::hex:
-        result = value.toString(16, static_cast<bool>(uppercaseFlag));
+        result = value.toString(Radix::Hex, static_cast<bool>(uppercaseFlag));
         if(showBaseFlag) {
             result.insert(result.begin(), 'x');
             result.insert(result.begin(), '0');
         }
         break;
     case std::ios_base::dec:
-        result = value.toString(10);
+        result = value.toString(Radix::Dec);
         break;
     case std::ios_base::oct:
+        result = value.toString(Radix::Oct);
         if(showBaseFlag) {
-            result = value.toString(8);
             result.insert(result.begin(), '0');
         }
         break;
     default:
-        result = value.toString(10);
+        result = value.toString(Radix::Dec);
         break;
     }
     if(showPosFlag) {
@@ -1348,16 +1511,16 @@ std::ostream& operator << (std::ostream &out, const BigInt &value)
     return out;
 }
 
-std::istream& operator >> (std::istream &in, BigInt &value)
+std::istream& operator >> (std::istream& in, BigInt& value)
 {
-    std::ios_base::fmtflags baseFlag = std::cin.flags() &
+    std::ios_base::fmtflags baseFlag = std::cin.flags()&
             (std::ios_base::hex | std::ios_base::dec | std::ios_base::oct);
     std::string strValue;
     in >> strValue;
     switch(baseFlag) {
     case std::ios_base::hex:
-        value = strToBigInt(strValue, 16);
-        if((strValue[0] == '+' || strValue[0] == '-') &&
+        value = strToBigInt(strValue, Radix::Hex);
+        if((strValue[0] == '+' || strValue[0] == '-')&&
                 ((isdigit(strValue[1]) && strValue[1] - 48 <= 16) ||
                  (isupper(strValue[1]) && strValue[1] - 55 <= 16) ||
                  (islower(strValue[1]) && strValue[1] - 87 <= 16))) {
@@ -1371,8 +1534,8 @@ std::istream& operator >> (std::istream &in, BigInt &value)
         }
         break;
     case std::ios_base::dec:
-        value = strToBigInt(strValue, 10);
-        if((strValue[0] == '+' || strValue[0] == '-') &&
+        value = strToBigInt(strValue, Radix::Dec);
+        if((strValue[0] == '+' || strValue[0] == '-')&&
                 ((isdigit(strValue[1]) && strValue[1] - 48 <= 10))) {
             in.clear(std::ios::goodbit);
         } else if(isdigit(strValue[0]) && strValue[1] - 48 <= 10) {
@@ -1382,8 +1545,8 @@ std::istream& operator >> (std::istream &in, BigInt &value)
         }
         break;
     case std::ios_base::oct:
-        value = strToBigInt(strValue, 8);
-        if((strValue[0] == '+' || strValue[0] == '-') &&
+        value = strToBigInt(strValue, Radix::Oct);
+        if((strValue[0] == '+' || strValue[0] == '-')&&
                 ((isdigit(strValue[1]) && strValue[1] - 48 <= 8))) {
             in.clear(std::ios::goodbit);
         } else if(isdigit(strValue[0]) && strValue[1] - 48 <= 8) {
@@ -1393,7 +1556,7 @@ std::istream& operator >> (std::istream &in, BigInt &value)
         }
         break;
     default:
-        if((strValue[0] == '+' || strValue[0] == '-') &&
+        if((strValue[0] == '+' || strValue[0] == '-')&&
                 ((isdigit(strValue[1]) && strValue[1] - 48 <= 10))) {
             in.clear(std::ios::goodbit);
         } else if(isdigit(strValue[0]) && strValue[1] - 48 <= 10) {
@@ -1401,99 +1564,99 @@ std::istream& operator >> (std::istream &in, BigInt &value)
         } else {
             in.clear(std::ios::failbit);
         }
-        value = strToBigInt(strValue, 10);
+        value = strToBigInt(strValue, Radix::Dec);
         break;
     }
     return in;
 }
 
-BigInt shr(const BigInt &value, const size_t shift)
+BigInt shr(const BigInt& value, const size_t shift)
 {
     return value.shrBitsBase(shift);
 }
 
-BigInt shl(const BigInt &value, const size_t shift)
+BigInt shl(const BigInt& value, const size_t shift)
 {
     return value.shlBitsBase(shift);
 }
 
-BigInt sqr(const BigInt &value)
+BigInt sqr(const BigInt& value)
 {
     return value.powBase(2);
 }
 
-BigInt pow(const BigInt &value, const long long exp)
+BigInt pow(const BigInt& value, const long long exp)
 {
     return value.powBase(exp);
 }
 
-BigInt pow(const BigInt &value, const BigInt exp)
+BigInt pow(const BigInt& value, const BigInt exp)
 {
     return value.powBase(exp);
 }
 
-BigInt powMod(const BigInt &value, const long long exp, const BigInt &mod)
+BigInt powMod(const BigInt& value, const long long exp, const BigInt& mod)
 {
     return value.powModBase(exp, mod);
 }
 
-BigInt powMod(const BigInt &value, const BigInt exp, const BigInt &mod)
+BigInt powMod(const BigInt& value, const BigInt exp, const BigInt& mod)
 {
     return value.powModBase(exp, mod);
 }
 
-BigInt sqrt(const BigInt &value)
+BigInt sqrt(const BigInt& value)
 {
     return value.rootBase(2);
 }
 
-BigInt root(const BigInt &value, const long long exp)
+BigInt root(const BigInt& value, const long long exp)
 {
     return value.rootBase(exp);
 }
 
-BigInt root(const BigInt &value, const BigInt &exp)
+BigInt root(const BigInt& value, const BigInt& exp)
 {
     return value.rootBase(exp);
 }
 
-BigInt abs(const BigInt &value)
+BigInt abs(const BigInt& value)
 {
    if(value.m_sign) {
-       return value.mulBase(-1);
+       return -value;//value.mulBase(-1);
    }
    return value;
 }
 
-BigInt gcd(const BigInt &value_1, const BigInt &value_2)
+BigInt gcd(const BigInt& value_1, const BigInt& value_2)
 {
-    BigInt innerValue_1 = std::max(value_1, value_2);
-    BigInt innerValue_2 = std::min(value_1, value_2);
-    while(innerValue_2 > 0) {
-        innerValue_1 = innerValue_1.remBase(innerValue_2);
-        std::swap(innerValue_1, innerValue_2);
+    BigInt _value_1 = std::max(value_1, value_2);
+    BigInt _value_2 = std::min(value_1, value_2);
+    while(_value_2 > 0) {
+        _value_1 = _value_1.remBase(_value_2);
+        std::swap(_value_1, _value_2);
     }
-    return innerValue_1;
+    return _value_1;
 }
 
-BigInt gcdExt(const BigInt &value_1, const BigInt &value_2,
-               BigInt &factor_1, BigInt &factor_2)
+BigInt gcdExt(const BigInt& value_1, const BigInt& value_2,
+               BigInt& factor_1, BigInt& factor_2)
 {
-    BigInt innerValue_1 = std::max(value_1, value_2);
-    BigInt innerValue_2 = std::min(value_1, value_2);
-    if(innerValue_2 == 0) {
+    BigInt _value_1 = std::max(value_1, value_2);
+    BigInt _value_2 = std::min(value_1, value_2);
+    if(_value_2 == 0) {
         factor_1 = 1;
         factor_2 = 0;
-        return innerValue_1;
+        return _value_1;
     }
     BigInt q, r, x_1, x_2(1), y_1(1), y_2;
-    while(innerValue_2 > 0) {
-        q = innerValue_1.divBase(innerValue_2);
-        r = innerValue_1.subBase(q.mulBase(innerValue_2));
+    while(_value_2 > 0) {
+        q = _value_1.divBase(_value_2);
+        r = _value_1.subBase(q.mulBase(_value_2));
         factor_1 = x_2.subBase(q.mulBase(x_1));
         factor_2 = y_2.subBase(q.mulBase(y_1));
-        innerValue_1 = innerValue_2;
-        innerValue_2 = r;
+        _value_1 = _value_2;
+        _value_2 = r;
         x_2 = x_1;
         x_1 = factor_1;
         y_2 = y_1;
@@ -1501,10 +1664,10 @@ BigInt gcdExt(const BigInt &value_1, const BigInt &value_2,
     }
     factor_1 = x_2;
     factor_2 = y_2;
-    return innerValue_1;
+    return _value_1;
 }
 
-int getLegendreSymbol(const BigInt &aValue, const BigInt &pValue)
+int getLegendreSymbol(const BigInt& aValue, const BigInt& pValue)
 {
     BigInt mod = aValue.remBase(pValue);
     if(mod == 0) {
@@ -1521,7 +1684,7 @@ int getLegendreSymbol(const BigInt &aValue, const BigInt &pValue)
     return -1;
 }
 
-int getJacobiSymbol(const BigInt &aValue, const BigInt &pValue)
+int getJacobiSymbol(const BigInt& aValue, const BigInt& pValue)
 {
     if(pValue.isEven() || pValue < 1) {
         throw BigIntException("Invalid value of function parameters",
@@ -1530,33 +1693,33 @@ int getJacobiSymbol(const BigInt &aValue, const BigInt &pValue)
     if(pValue == 1) {
         return 1;
     }
-    BigInt innerAValue(aValue);
-    BigInt innerPValue(pValue);
-    if(gcd(innerAValue, innerPValue) != 1) {
+    BigInt _aValue(aValue);
+    BigInt _pValue(pValue);
+    if(gcd(_aValue, _pValue) != 1) {
         return 0;
     }
     int result = 1;
-    if(innerAValue < 0) {
-        innerAValue = -innerAValue;
-        if(innerPValue.remBase(4) == 3) {
+    if(_aValue < 0) {
+        _aValue = -_aValue;
+        if(_pValue.remBase(4) == 3) {
             result = -result;
         }
     }
-    while(innerAValue != 0) {
+    while(_aValue != 0) {
         BigInt tempValue_1(0);
-        while(innerAValue.isEven()) {
+        while(_aValue.isEven()) {
             tempValue_1 = tempValue_1.addBase(1);
-            innerAValue = innerAValue.divBase(2);
+            _aValue = _aValue.divBase(2);
         }
-        if(!tempValue_1.isEven() && ((innerPValue.remBase(8) == 3) || (innerPValue.remBase(8) == 5))) {
+        if(!tempValue_1.isEven() && ((_pValue.remBase(8) == 3) || (_pValue.remBase(8) == 5))) {
             result = -result;
         }
-        if((innerAValue.remBase(4) == innerPValue.remBase(4)) && (innerPValue.remBase(4) == 3)) {
+        if((_aValue.remBase(4) == _pValue.remBase(4)) && (_pValue.remBase(4) == 3)) {
             result = -result;
         }
-        BigInt tempValue_2 = innerAValue;
-        innerAValue = innerPValue.remBase(tempValue_2);
-        innerPValue = tempValue_2;
+        BigInt tempValue_2 = _aValue;
+        _aValue = _pValue.remBase(tempValue_2);
+        _pValue = tempValue_2;
     }
     return result;
 }
