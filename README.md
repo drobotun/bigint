@@ -574,7 +574,7 @@ The BigInt class is not thread-safe. If you need to use BigInt objects across mu
 
 ## License
 
-MIT Copyright (c) 2025 Evgeny Drobotun, Anna Boykova
+MIT Copyright (c) 2025 **Evgeny Drobotun**, **Anna Boykova**
 
 ## Contacts
 
