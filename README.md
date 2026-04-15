@@ -4,6 +4,7 @@
 ![Version](https://img.shields.io/badge/Release-0.1.0-blue)
 
 A C++ library for performing arithmetic and logical operations on long (arbitrary precision) integers.
+
 Copyright (c) 2025 Evgeny Drobotun, Anna Boykova
 
 ## Table of Contents
