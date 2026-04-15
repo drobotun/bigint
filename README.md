@@ -395,33 +395,33 @@ int main() {
 
 ### Constructors
 
-- 'BigInt()' - Default constructor (value = 0)
-- 'BigInt(int/long/long long/unsigned...)' - From standard integer types
-- 'BigInt(const std::string&, Radix = Radix::Dec)' - From string with specified radix
-- 'BigInt(const char*, Radix = Radix::Dec)' - From C-string with specified radix
-- 'BigInt(const BigInt&)' - Copy constructor
-- 'BigInt(BigInt&&)' - Move constructor
+- `BigInt() - Default constructor (value = 0)
+- `BigInt(int/long/long long/unsigned...)` - From standard integer types
+- `BigInt(const std::string&, Radix = Radix::Dec)` - From string with specified radix
+- `BigInt(const char*, Radix = Radix::Dec)` - From C-string with specified radix
+- `BigInt(const BigInt&)` - Copy constructor
+- `BigInt(BigInt&&)` - Move constructor
 
 ### Core Methods
 
-- 'size_t length() const' - Returns number of bytes
-- 'size_t numBits() const' - Returns number of significant bits
-- 'bool isEven() const' - Checks if the number is even
-- 'std::string toString(Radix = Radix::Dec, bool upper = false) const' - Convert to string in specified base
-- 'void setMulMethod(MulMethod)' - Set multiplication algorithm (Karatsuba/FFT)
+- `size_t length() const` - Returns number of bytes
+- `size_t numBits() const` - Returns number of significant bits
+- `bool isEven() const` - Checks if the number is even
+- `std::string toString(Radix = Radix::Dec, bool upper = false) const` - Convert to string in specified base
+- `void setMulMethod(MulMethod)` - Set multiplication algorithm (Karatsuba/FFT)
 
 ### Conversion Methods
 
-- 'int toInt() const' - Convert to int (throws on overflow)
-- 'long toLong() const' - Convert to long (throws on overflow)
-- 'long long toLongLong() const' - Convert to long long (throws on overflow)
-- 'unsigned int toUInt() const' - Convert to unsigned int
-- 'unsigned long toULong() const' - Convert to unsigned long
-- 'unsigned long long toULongLong() const' - Convert to unsigned long long
-- 'std::string toHex(bool upper = false) const' - Convert to hexadecimal string
-- 'std::string toDec() const' - Convert to decimal string
-- 'std::string toOct() const' - Convert to octal string
-- 'std::string toBin() const' - Convert to binary string
+- `int toInt() const` - Convert to int (throws on overflow)
+- `long toLong() const` - Convert to long (throws on overflow)
+- `long long toLongLong() const` - Convert to long long (throws on overflow)
+- `unsigned int toUInt() const` - Convert to unsigned int
+- `unsigned long toULong() const` - Convert to unsigned long
+- `unsigned long long toULongLong() const` - Convert to unsigned long long
+- `std::string toHex(bool upper = false) const` - Convert to hexadecimal string
+- `std::string toDec() const` - Convert to decimal string
+- `std::string toOct() const` - Convert to octal string
+- `std::string toBin() const` - Convert to binary string
 
 ### Operators Overloaded
 
@@ -434,23 +434,23 @@ int main() {
 
 ### Friend Functions
 
-- std::ostream& operator<<(std::ostream&, const BigInt&) - Stream output
-- std::istream& operator>>(std::istream&, BigInt&) - Stream input
-- BigInt shr(const BigInt&, size_t) - Right shift
-- BigInt shl(const BigInt&, size_t) - Left shift
-- BigInt sqr(const BigInt&) - Square
-- BigInt pow(const BigInt&, long long) - Power
-- BigInt pow(const BigInt&, const BigInt&) - Power
-- BigInt powMod(const BigInt&, long long, const BigInt&) - Modular power
-- BigInt powMod(const BigInt&, const BigInt&, const BigInt&) - Modular power
-- BigInt sqrt(const BigInt&) - Square root
-- BigInt root(const BigInt&, long long) - N-th root
-- BigInt root(const BigInt&, const BigInt&) - N-th root
-- BigInt abs(const BigInt&) - Absolute value
-- BigInt gcd(const BigInt&, const BigInt&) - Greatest common divisor
-- BigInt gcdExt(const BigInt&, const BigInt&, BigInt&, BigInt&) - Extended GCD
-- int getLegendreSymbol(const BigInt&, const BigInt&) - Legendre symbol
-- int getJacobiSymbol(const BigInt&, const BigInt&) - Jacobi symbol
+- `std::ostream& operator<<(std::ostream&, const BigInt&)` - Stream output
+- `std::istream& operator>>(std::istream&, BigInt&)` - Stream input
+- `BigInt shr(const BigInt&, size_t)` - Right shift
+- `BigInt shl(const BigInt&, size_t)` - Left shift
+- `BigInt sqr(const BigInt&)` - Square
+- `BigInt pow(const BigInt&, long long)` - Power
+- `BigInt pow(const BigInt&, const BigInt&)` - Power
+- `BigInt powMod(const BigInt&, long long, const BigInt&)` - Modular power
+- `BigInt powMod(const BigInt&, const BigInt&, const BigInt&)` - Modular power
+- `BigInt sqrt(const BigInt&)` - Square root
+- `BigInt root(const BigInt&, long long)` - N-th root
+- `BigInt root(const BigInt&, const BigInt&)` - N-th root
+- `BigInt abs(const BigInt&)` - Absolute value
+- `BigInt gcd(const BigInt&, const BigInt&)` - Greatest common divisor
+- `BigInt gcdExt(const BigInt&, const BigInt&, BigInt&, BigInt&)` - Extended GCD
+- `int getLegendreSymbol(const BigInt&, const BigInt&)` - Legendre symbol
+- `int getJacobiSymbol(const BigInt&, const BigInt&)` - Jacobi symbol
 
 ## Error Handling
 
