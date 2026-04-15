@@ -532,7 +532,7 @@ int main() {
 
 **Radix** - Number system bases:
 
-cpp```
+```cpp
 enum class Radix {
     Hex,  // Hexadecimal (base 16)
     Dec,  // Decimal (base 10)
@@ -543,7 +543,7 @@ enum class Radix {
 
 **MulMethod** - Multiplication algorithms:
 
-cpp```
+```cpp
 enum class MulMethod {
     Karatsuba,              // Karatsuba algorithm (default)
     FastFourierTransform    // FFT-based multiplication
@@ -552,7 +552,7 @@ enum class MulMethod {
 
 **ExceptionCode** - Error codes:
 
-cpp```
+```cpp
 enum class ExceptionCode {
     Unknown,          // Unknown error
     DivisionByZero,   // Division by zero
