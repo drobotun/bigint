@@ -29,7 +29,7 @@ The `BigInt` library implements arithmetic and logical operations for integers o
 - **Addition** (`+`)
 - **Subtraction** (`-`)
 - **Multiplication** (`*`)
-  - Native method (for numbers < 29,000 bytes)
+  - Native method (for numbers < 20,000 bytes)
   - Karatsuba method (for numbers ≥ 20,000 bytes, **default**)
   - Fast Fourier Transform (FFT) method (for numbers ≥ 20,000 bytes)
 - **Division** (`/`)
