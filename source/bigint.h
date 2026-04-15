@@ -35,6 +35,7 @@
 #include <cctype>
 #include <vector>
 #include <string>
+#include <cstring>
 #include <algorithm>
 #include <complex>
 #include <climits>
@@ -43,7 +44,8 @@ enum class ExceptionCode {
     Unknown,
     DivisionByZero,
     InvalidRootDegree,
-    InvalidValue
+    InvalidValue,
+    LengthError
 };
 
 enum class Radix {
@@ -64,6 +66,7 @@ public:
     BigIntException(const std::string& message);
     BigIntException(const ExceptionCode code);
     BigIntException(const std::string& message, const ExceptionCode code);
+    ~BigIntException() override = default;
     const char* what() const noexcept override;
     ExceptionCode getExceptionCode() const noexcept;
 private:
@@ -72,6 +75,7 @@ private:
 };
 
 const double PI{std::acos(-1)};
+const size_t NATIVE_LIMIT{20000};
 const size_t LLONG_SIZE{8};
 
 class BigInt
@@ -84,28 +88,26 @@ public:
     BigInt();
     BigInt(const std::string& value, const Radix radix = Radix::Dec);
     BigInt(const char* strValue, const Radix radix = Radix::Dec);
-    BigInt(const long long value);
     BigInt(const int value);
-    BigInt(const size_t value);
+    BigInt(const long value);
+    BigInt(const long long value);
+    BigInt(const unsigned int value);
+    BigInt(const unsigned long value);
+    BigInt(const unsigned long long value);
     BigInt(const BigInt& other);
-#if __cplusplus >= 201103L
     BigInt(BigInt&& other) noexcept;
-#endif
-    ~BigInt();
+    ~BigInt() = default;
     BigInt& operator = (const long long value);
     BigInt& operator = (const BigInt& other);
-#if __cplusplus >= 201103L
-    BigInt& operator = (BigInt&& other)noexcept;
-#endif
-
+    BigInt& operator = (BigInt&& other) noexcept;
     size_t length() const;
     bool isEven() const;
-    size_t numBits();
+    size_t numBits() const;
     std::string toString(const Radix radix = Radix::Dec, const bool upper = false) const;
-    std::string toHex(const bool upper = false);
-    std::string toDec();
-    std::string toOct();
-    std::string toBin();
+    std::string toHex(const bool upper = false) const;
+    std::string toDec() const;
+    std::string toOct() const;
+    std::string toBin() const;
     int toInt() const;
     long toLong() const;
     long long toLongLong() const;
@@ -141,8 +143,8 @@ public:
     BigInt operator % (const BigInt& other) const;
     BigInt operator % (const long long other) const;
 
-    BigInt operator&  (const BigInt& other) const;
-    BigInt operator&  (const long long other) const;
+    BigInt operator &  (const BigInt& other) const;
+    BigInt operator &  (const long long other) const;
     BigInt operator | (const BigInt& other) const;
     BigInt operator | (const long long other) const;
     BigInt operator ^ (const BigInt& other) const;
@@ -212,6 +214,8 @@ private:
     BigInt shlBytesBase(const size_t shift) const;
     BigInt shrBytesBase(const size_t shift) const;
 
+    template<typename Op>
+    BigInt bitwiseOperation(const BigInt& value, Op operation, bool isAnd = false) const;
     BigInt orBase(const BigInt& value) const;
     BigInt andBase(const BigInt& value) const;
     BigInt xorBase(const BigInt& value) const;
@@ -234,9 +238,23 @@ private:
     BigInt powModBase(const BigInt& exp, const BigInt& mod) const;
     BigInt rootBase(const long long exp) const;
     BigInt rootBase(const BigInt& exp) const;
-
-    void normalise();
 };
+
+bool operator == (const long long leftValue, const BigInt& rightValue);
+bool operator != (const long long leftValue, const BigInt& rightValue);
+bool operator < (const long long leftValue, const BigInt& rightValue);
+bool operator > (const long long leftValue, const BigInt& rightValue);
+bool operator <= (const long long leftValue, const BigInt& rightValue);
+bool operator >= (const long long leftValue, const BigInt& rightValue);
+
+BigInt operator + (const long long leftValue, const BigInt& rightValue);
+BigInt operator - (const long long leftValue, const BigInt& rightValue);
+BigInt operator * (const long long leftValue, const BigInt& rightValue);
+BigInt operator / (const long long leftValue, const BigInt& rightValue);
+
+BigInt operator & (const long long leftValue, const BigInt& rightValue);
+BigInt operator | (const long long leftValue, const BigInt& rightValue);
+BigInt operator ^ (const long long leftValue, const BigInt& rightValue);
 
 BigInt strToBigInt(const std::string& strValue, const Radix radix = Radix::Dec);
 BigInt strToBigInt(const char *strValue, const Radix radix = Radix::Dec);
