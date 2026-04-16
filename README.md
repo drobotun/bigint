@@ -395,7 +395,7 @@ int main() {
 
 ### Constructors
 
-- `BigInt() - Default constructor (value = 0)
+- `BigInt()` - Default constructor (value = 0)
 - `BigInt(int/long/long long/unsigned...)` - From standard integer types
 - `BigInt(const std::string&, Radix = Radix::Dec)` - From string with specified radix
 - `BigInt(const char*, Radix = Radix::Dec)` - From C-string with specified radix
