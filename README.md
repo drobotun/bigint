@@ -354,11 +354,11 @@ int main() {
 
 int main() {
     BigInt factorial = 1;
-    for (int i = 1; i <= 1000000; ++i) {
+    for (int i = 1; i <= 10000; ++i) {
         factorial *= i;
     }
 
-    std::cout << "1000000! = " << factorial << std::endl;
+    std::cout << "10000! = " << factorial << std::endl;
     std::cout << "Number of digits: " << factorial.toString().length() << std::endl;
     std::cout << "Number of bits: " << factorial.numBits() << std::endl;
 
