@@ -5,7 +5,7 @@
 
 A C++ library for performing arithmetic and logical operations on long (arbitrary width) integers.
 
-Copyright (c) 2026 Evgeny Drobotun, Anna Boykova
+Copyright (c) 2026 [Evgeny Drobotun](https://github.com/drobotun), Anna Boykova
 
 ## Table of Contents
 - [Overview](#overview)
