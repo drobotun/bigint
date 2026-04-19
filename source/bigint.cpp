@@ -34,8 +34,8 @@ std::vector<std::complex<double>>getFft(const std::vector<std::complex<double>>&
     if(resultSize == 1) {
         return std::vector<std::complex<double>>(1, value[0]);
     }
-    std::vector<std::complex<double>> oddValue(resultSize / 2);
-    std::vector<std::complex<double>> evenValue(resultSize / 2);
+    std::vector<std::complex<double>> oddValue(resultSize >> 1);
+    std::vector<std::complex<double>> evenValue(resultSize >> 1);
     for(size_t i = 0, j = 0; i < resultSize; i += 2, ++j) {
         oddValue[j] = value[i];
         evenValue[j] = value[i + 1];
@@ -45,12 +45,12 @@ std::vector<std::complex<double>>getFft(const std::vector<std::complex<double>>&
     double angle = 2 * PI / resultSize * (invert ? -1 : 1);
     std::complex<double> root_1(1, 0);
     std::complex<double> root_n(std::cos(angle), std::sin(angle));
-    for(size_t i = 0; i < resultSize / 2; ++i) {
+    for(size_t i = 0; i < resultSize >> 1; ++i) {
         result[i] = oddValue[i] + root_1 * evenValue[i];
-        result[i + resultSize / 2] = oddValue[i] - root_1 * evenValue[i];
+        result[i + (resultSize >> 1)] = oddValue[i] - root_1 * evenValue[i];
         if(invert) {
             result[i] /= 2;
-            result[i + resultSize / 2] /= 2;
+            result[i + (resultSize >> 1)] /= 2;
         }
         root_1 *= root_n;
     }
